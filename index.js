@@ -2,7 +2,6 @@ require("dotenv").config();
 const mongoose = require("mongoose");
 const express = require("express");
 const cors = require("cors");
-const dns = require("dns");
 const bodyParser = require("body-parser");
 const app = express();
 
@@ -35,23 +34,21 @@ app.post("/api/shorturl", (req, res) => {
         let short_url = url_pair["short_url"];
         res.json({ original_url: url, short_url });
       } else {
-        dns.lookup(url, (err, data) => {
-          if (err || !urlPattern.test(url)) {
-            res.json({ error: "invalid url" });
-          } else {
-            Urlmodel.countDocuments()
-              .then((count) => {
-                console.log(count);
-                let new_url = new Urlmodel({ url, short_url: count });
-                new_url.save();
-                res.json({ original_url: url, short_url: count });
-              })
-              .catch((err) => {
-                console.error(err);
-                res.json({ error: "failed count" });
-              });
-          }
-        });
+        if (!urlPattern.test(url)) {
+          res.json({ error: "invalid url" });
+        } else {
+          Urlmodel.countDocuments()
+            .then((count) => {
+              console.log(count);
+              let new_url = new Urlmodel({ url, short_url: count });
+              new_url.save();
+              res.json({ original_url: url, short_url: count });
+            })
+            .catch((err) => {
+              console.error(err);
+              res.json({ error: "failed count" });
+            });
+        }
       }
     })
     .catch((err) => {
